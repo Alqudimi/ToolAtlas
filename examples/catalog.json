@@ -1,0 +1,28 @@
+{
+  "tools": [
+    {
+      "name": "read_repository",
+      "description": "Read source files for analysis",
+      "scopes": ["repo:read"]
+    },
+    {
+      "name": "delete_issue",
+      "description": "Delete an issue from the tracker",
+      "input_names": ["issue_id"],
+      "scopes": ["repo:write"]
+    },
+    {
+      "name": "upload_artifact",
+      "description": "Upload a build artifact",
+      "input_names": ["api_key"],
+      "scopes": ["network"]
+    }
+  ],
+  "resources": [
+    {
+      "name": "repository_metadata",
+      "description": "Repository metadata",
+      "scopes": ["repo:read"]
+    }
+  ]
+}
