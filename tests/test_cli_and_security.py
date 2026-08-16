@@ -9,13 +9,15 @@ from toolatlas.cli import main
 def test_cli_json_and_sarif_outputs(tmp_path: Path, capsys) -> None:
     source = tmp_path / "catalog.json"
     source.write_text(
-        json.dumps({"capabilities": [{"name": "read", "description": "Read only"}]}),
+        json.dumps({"capabilities": [{"name": "delete_user", "description": "Delete a user"}]}),
         encoding="utf-8",
     )
-    assert main(["scan", str(source), "--format", "json"]) == 0
+    assert main(["scan", str(source), "--format", "json"]) == 3
     assert json.loads(capsys.readouterr().out)["schema_version"] == 1
-    assert main(["scan", str(source), "--format", "sarif"]) == 0
-    assert json.loads(capsys.readouterr().out)["version"] == "2.1.0"
+    assert main(["scan", str(source), "--format", "sarif"]) == 3
+    sarif = json.loads(capsys.readouterr().out)
+    assert sarif["version"] == "2.1.0"
+    assert "physicalLocation" in sarif["runs"][0]["results"][0]["locations"][0]
 
 
 def test_cli_risk_exit_code_and_policy_file(tmp_path: Path, capsys) -> None:

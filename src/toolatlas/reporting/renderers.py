@@ -48,7 +48,15 @@ def sarif_report(result: ScanResult) -> str:
                 "ruleId": finding.rule_id,
                 "level": "error" if finding.severity.rank >= 3 else "warning",
                 "message": {"text": f"{finding.evidence}. Remediation: {finding.remediation}"},
-                "locations": [{"logicalLocations": [{"name": finding.capability_id}]}],
+                "locations": [
+                    {
+                        "physicalLocation": {
+                            "artifactLocation": {"uri": result.manifest.source},
+                            "region": {"startLine": 1},
+                        },
+                        "logicalLocations": [{"name": finding.capability_id}],
+                    }
+                ],
                 "properties": {
                     "severity": finding.severity.value,
                     "confidence": finding.confidence,
