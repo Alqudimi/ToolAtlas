@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  quality:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install
+        run: python -m pip install -e '.[dev]'
+      - name: Lint
+        run: ruff check src tests
+      - name: Format check
+        run: ruff format --check src tests
+      - name: Type check
+        run: mypy src
+      - name: Tests
+        run: pytest -q --cov=toolatlas --cov-report=term-missing --cov-fail-under=85
+      - name: Build
+        if: matrix.python-version == '3.12'
+        run: python -m build
+      - name: Dependency audit
+        if: matrix.python-version == '3.12'
+        run: |
+          python -m pip check
+          python -m pip install bandit pip-audit
+          bandit -q -r src
+          pip-audit --skip-editable
+
+  sarif:
+    name: Capability SARIF
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install
+        run: python -m pip install -e .
+      - name: Scan example
+        run: |
+          set +e
+          toolatlas scan examples/catalog.json --format sarif --output toolatlas.sarif
+          code=$?
+          test "$code" -eq 3
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: toolatlas.sarif
