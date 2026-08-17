@@ -16,6 +16,18 @@ make audit
 make build
 ```
 
+## Repository gate workflow
+
+The repository scanner is intentionally conservative. Add a fixture for every new rule, include both positive and negative cases, and verify that fixture content is never imported or executed. For lock and baseline changes, assert deterministic JSON and stable exit codes.
+
+```bash
+python -m toolatlas repo-scan examples --format json
+python -m toolatlas lock examples --output /tmp/toolatlas.lock.json
+python -m toolatlas lock examples --output /tmp/toolatlas.lock.json --verify
+python -m toolatlas baseline examples --output /tmp/toolatlas.baseline.json
+python -m toolatlas baseline examples --output /tmp/toolatlas.baseline.json --check
+```
+
 ## Test strategy
 
 Unit tests exercise the domain and rules with in-memory records. Integration-style tests invoke the public CLI, write temporary catalogs, validate JSON and SARIF output, and assert stable exit codes. Fixtures are deliberately synthetic and contain no real credentials or network targets.

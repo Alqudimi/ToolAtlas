@@ -1,4 +1,4 @@
-.PHONY: install test lint format typecheck audit security build demo
+.PHONY: install test lint format typecheck audit security repo-gate build demo
 
 install:
 	python -m pip install -e '.[dev]'
@@ -21,7 +21,12 @@ audit:
 
 security:
 	bandit -q -r src
-	pip-audit --skip-editable
+	pip-audit .
+
+repo-gate:
+	toolatlas repo-scan examples --format terminal || test $$? -eq 3
+	toolatlas lock examples --output /tmp/toolatlas.lock.json
+	toolatlas lock examples --output /tmp/toolatlas.lock.json --verify
 
 build:
 	python -m build

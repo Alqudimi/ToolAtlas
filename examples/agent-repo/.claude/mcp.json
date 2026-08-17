@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "repository-reader": {
+      "command": "tool-provider",
+      "args": ["--read-only"],
+      "env": {}
+    }
+  }
+}

@@ -28,6 +28,10 @@ ToolAtlas is designed as that missing pre-runtime layer. Its manifest can be che
 | CI-ready reports | Emits terminal, JSON, and SARIF 2.1.0 output. |
 | Safe by default | Parses bounded data only; never executes commands or contacts the network. |
 | Extensible core | Adapters, rules, and reporters have separate boundaries for future MCP/OpenAPI/A2A integrations. |
+| Repository gate | Scans agent context and MCP configuration without executing repository content. |
+| Reproducible lockfile | Records bounded file inventory, SHA-256 digests, and scanner version for drift checks. |
+| Baseline enforcement | Distinguishes accepted findings from new findings in pull requests. |
+| Cross-file correlation | Connects secret-like content with network-capable behavior to surface compound risk. |
 
 ## Quick start
 
@@ -46,6 +50,21 @@ toolatlas policy examples/catalog.json --output toolatlas-policy.json
 ```
 
 The example intentionally contains risky declarations. A scan therefore exits with code `3`, while still producing a useful report. This is suitable for advisory review first and enforcement after a repository adds an explicit policy.
+
+### Agent repository gate
+
+ToolAtlas can scan a repository of agent instructions, skills, MCP configuration, and source-adjacent text without importing or executing any file:
+
+```bash
+toolatlas repo-scan . --format terminal
+toolatlas repo-scan . --format sarif --output toolatlas.sarif
+toolatlas lock . --output toolatlas.lock.json
+toolatlas lock . --output toolatlas.lock.json --verify
+toolatlas baseline . --output toolatlas.baseline.json
+toolatlas baseline . --output toolatlas.baseline.json --check
+```
+
+The lockfile is a reproducibility record, not a publisher signature or SLSA attestation. The baseline is intentionally explicit: new findings fail with exit code `3`, while the report remains available for review. Path traversal, oversized files, invalid UTF-8, hidden Unicode, secret-like literals, risky command sinks, and compound cross-file signals are tested as untrusted-input cases.
 
 ## Input contract
 
@@ -74,6 +93,9 @@ It also accepts an MCP-like shape with `tools`, `resources`, and `prompts` array
 toolatlas scan INPUT [--format terminal|json|sarif] [--output PATH]
 toolatlas policy INPUT [--max-severity info|low|medium|high|critical] [--output PATH]
 toolatlas diff BEFORE AFTER [--format terminal|json] [--output PATH]
+toolatlas repo-scan ROOT [--format terminal|json|sarif] [--output PATH]
+toolatlas lock ROOT [--output PATH] [--verify]
+toolatlas baseline ROOT [--output PATH] [--check]
 ```
 
 | Code | Meaning |
@@ -105,7 +127,19 @@ The domain models are independent of the CLI and filesystem. The adapter owns bo
 
 ## GitHub Actions
 
-A repository can run ToolAtlas as a normal Python quality gate and upload SARIF through the standard GitHub code-scanning action. The included workflow demonstrates the pattern without requiring Docker or external services.
+A repository can use the published composite action after checking out its code:
+
+```yaml
+- uses: actions/checkout@v4
+- uses: Alqudimi/ToolAtlas@main
+  with:
+    path: .
+    fail-on-high: 'true'
+```
+
+For stronger supply-chain pinning, reference a reviewed release tag or full commit SHA. The action emits SARIF with physical file locations and uploads the report as a workflow artifact.
+
+A repository can also run ToolAtlas as a normal Python quality gate and upload SARIF through the standard GitHub code-scanning action. The included workflow demonstrates the pattern without requiring Docker or external services.
 
 ```yaml
 - run: toolatlas scan capabilities.json --format sarif --output toolatlas.sarif
@@ -127,7 +161,7 @@ make build
 make demo
 ```
 
-Tests cover normalization, deterministic digests, malformed and duplicate input, secret-like fields, risk findings, policy compilation, manifest drift, SARIF shape, CLI output, and stable exit codes. ToolAtlas intentionally does not claim a performance number without a benchmark; the benchmark suite is planned for the next maintenance slice once the public contract stabilizes.
+Tests cover normalization, deterministic digests, malformed and duplicate input, secret-like fields, risk findings, policy compilation, manifest drift, SARIF shape, repository traversal safety, hidden Unicode, lock verification, baseline enforcement, CLI output, and stable exit codes. Repository scanning is bounded and benchmarkable; the benchmark suite measures file inventory and digest work without making an environment-independent throughput promise.
 
 ## Security
 
@@ -135,7 +169,7 @@ Treat catalogs as untrusted input. The parser is bounded and strict, and the app
 
 ## Roadmap
 
-The next release can add an MCP initialize/list adapter, a checked-in baseline command, richer SARIF suppression metadata, OpenAPI and A2A adapters, and signed manifests. A future runtime adapter may consume the manifest, but the deterministic offline core will remain the compatibility boundary.
+The next release can add an MCP initialize/list adapter, richer SARIF suppression metadata, OpenAPI and A2A adapters, and signed manifests. A future runtime adapter may consume the manifest, but the deterministic offline core will remain the compatibility boundary.
 
 ## Contributing
 

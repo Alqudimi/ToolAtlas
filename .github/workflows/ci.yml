@@ -33,6 +33,11 @@ jobs:
         run: mypy src
       - name: Tests
         run: pytest -q --cov=toolatlas --cov-report=term-missing --cov-fail-under=85
+      - name: Repository gate smoke test
+        run: |
+          toolatlas repo-scan examples --format json --output /tmp/toolatlas-repository.json
+          toolatlas lock examples --output /tmp/toolatlas.lock.json
+          toolatlas lock examples --output /tmp/toolatlas.lock.json --verify
       - name: Build
         if: matrix.python-version == '3.12'
         run: python -m build
@@ -42,7 +47,7 @@ jobs:
           python -m pip check
           python -m pip install bandit pip-audit
           bandit -q -r src
-          pip-audit --skip-editable
+          pip-audit .
 
   sarif:
     name: Capability SARIF
@@ -62,6 +67,6 @@ jobs:
           test "$code" -eq 3
       - name: Upload SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: toolatlas.sarif

@@ -7,6 +7,7 @@ from typing import Any
 
 from toolatlas.application.services import manifest_payload, policy_payload
 from toolatlas.domain.models import CompiledPolicy, ManifestDiff, ScanResult
+from toolatlas.domain.repository import RepositoryManifest
 
 
 def json_report(result: ScanResult) -> str:
@@ -77,6 +78,51 @@ def sarif_report(result: ScanResult) -> str:
                 },
                 "results": results,
                 "properties": {"manifestDigest": result.manifest.digest},
+            }
+        ],
+    }
+    return json.dumps(document, ensure_ascii=False, indent=2) + "\n"
+
+
+def repository_sarif_report(manifest: RepositoryManifest) -> str:
+    rules: dict[str, dict[str, str]] = {}
+    results: list[dict[str, Any]] = []
+    for finding in manifest.findings:
+        rules.setdefault(finding.rule_id, {"id": finding.rule_id, "name": finding.title})
+        results.append(
+            {
+                "ruleId": finding.rule_id,
+                "level": "error" if finding.severity.rank >= 3 else "warning",
+                "message": {"text": f"{finding.evidence}. Remediation: {finding.remediation}"},
+                "locations": [
+                    {
+                        "physicalLocation": {
+                            "artifactLocation": {"uri": finding.path},
+                            "region": {"startLine": finding.line},
+                        }
+                    }
+                ],
+                "properties": {
+                    "severity": finding.severity.value,
+                    "confidence": finding.confidence,
+                    "relatedPaths": list(finding.related_paths),
+                },
+            }
+        )
+    document = {
+        "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+        "version": "2.1.0",
+        "runs": [
+            {
+                "tool": {
+                    "driver": {
+                        "name": "ToolAtlas repository gate",
+                        "informationUri": "https://github.com/Alqudimi/ToolAtlas",
+                        "rules": list(rules.values()),
+                    }
+                },
+                "results": results,
+                "properties": {"manifestDigest": manifest.digest},
             }
         ],
     }
