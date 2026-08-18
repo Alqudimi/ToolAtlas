@@ -2,6 +2,18 @@
 
 All notable changes to ToolAtlas are documented here.
 
+## [0.3.0] - 2026-08-18
+
+### Added
+
+- Deterministic SARIF `partialFingerprints` for capability and repository findings.
+- Stable `toolatlas/v1` fingerprint namespace to prevent duplicate GitHub Code Scanning alerts across runs.
+- Regression coverage for physical locations and fingerprint presence.
+
+### Security notes
+
+Fingerprints improve alert identity and deduplication; they do not change rule confidence or prove that a repository is safe.
+
 ## [0.2.0] - 2026-08-17
 
 ### Added

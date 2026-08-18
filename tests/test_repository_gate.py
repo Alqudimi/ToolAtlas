@@ -81,6 +81,17 @@ def test_cli_repository_commands_and_sarif(
     assert capsys.readouterr().out == ""
 
 
+def test_repository_sarif_has_fingerprints(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    (tmp_path / "secret.txt").write_text("token=super-secret-value-1234", encoding="utf-8")
+    assert main(["repo-scan", str(tmp_path), "--format", "sarif"]) == 3
+    sarif = json.loads(capsys.readouterr().out)
+    results = sarif["runs"][0]["results"]
+    assert results
+    assert all(result["partialFingerprints"]["toolatlas/v1"] for result in results)
+
+
 def test_file_limit_is_enforced(tmp_path: Path) -> None:
     (tmp_path / "large.md").write_text("x" * 20, encoding="utf-8")
     with pytest.raises(Exception, match="file exceeds limit"):

@@ -17,7 +17,9 @@ def test_cli_json_and_sarif_outputs(tmp_path: Path, capsys) -> None:
     assert main(["scan", str(source), "--format", "sarif"]) == 3
     sarif = json.loads(capsys.readouterr().out)
     assert sarif["version"] == "2.1.0"
-    assert "physicalLocation" in sarif["runs"][0]["results"][0]["locations"][0]
+    result = sarif["runs"][0]["results"][0]
+    assert "physicalLocation" in result["locations"][0]
+    assert result["partialFingerprints"]["toolatlas/v1"]
 
 
 def test_cli_risk_exit_code_and_policy_file(tmp_path: Path, capsys) -> None:

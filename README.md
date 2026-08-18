@@ -32,6 +32,7 @@ ToolAtlas is designed as that missing pre-runtime layer. Its manifest can be che
 | Reproducible lockfile | Records bounded file inventory, SHA-256 digests, and scanner version for drift checks. |
 | Baseline enforcement | Distinguishes accepted findings from new findings in pull requests. |
 | Cross-file correlation | Connects secret-like content with network-capable behavior to surface compound risk. |
+| Stable SARIF identity | Emits deterministic `partialFingerprints` so GitHub Code Scanning can deduplicate alerts across runs. |
 
 ## Quick start
 
@@ -131,13 +132,13 @@ A repository can use the published composite action after checking out its code:
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: Alqudimi/ToolAtlas@main
+- uses: Alqudimi/ToolAtlas@v0.3.0
   with:
     path: .
     fail-on-high: 'true'
 ```
 
-For stronger supply-chain pinning, reference a reviewed release tag or full commit SHA. The action emits SARIF with physical file locations and uploads the report as a workflow artifact.
+The example uses the reviewed `v0.3.0` release tag. For stronger supply-chain pinning, reference the full commit SHA. The action emits SARIF with physical file locations and deterministic `partialFingerprints`, then uploads the report as a workflow artifact.
 
 A repository can also run ToolAtlas as a normal Python quality gate and upload SARIF through the standard GitHub code-scanning action. The included workflow demonstrates the pattern without requiring Docker or external services.
 
@@ -161,7 +162,7 @@ make build
 make demo
 ```
 
-Tests cover normalization, deterministic digests, malformed and duplicate input, secret-like fields, risk findings, policy compilation, manifest drift, SARIF shape, repository traversal safety, hidden Unicode, lock verification, baseline enforcement, CLI output, and stable exit codes. Repository scanning is bounded and benchmarkable; the benchmark suite measures file inventory and digest work without making an environment-independent throughput promise.
+Tests cover normalization, deterministic digests, malformed and duplicate input, secret-like fields, risk findings, policy compilation, manifest drift, SARIF physical locations and fingerprints, repository traversal safety, hidden Unicode, lock verification, baseline enforcement, CLI output, and stable exit codes. Repository scanning is bounded and benchmarkable; the benchmark suite measures file inventory and digest work without making an environment-independent throughput promise.
 
 ## Security
 

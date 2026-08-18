@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from typing import Any
 
 from toolatlas.application.services import manifest_payload, policy_payload
 from toolatlas.domain.models import CompiledPolicy, ManifestDiff, ScanResult
 from toolatlas.domain.repository import RepositoryManifest
+
+
+def _fingerprint(*parts: object) -> str:
+    value = "|".join(str(part) for part in parts).encode("utf-8")
+    return hashlib.sha256(value).hexdigest()
 
 
 def json_report(result: ScanResult) -> str:
@@ -58,6 +64,13 @@ def sarif_report(result: ScanResult) -> str:
                         "logicalLocations": [{"name": finding.capability_id}],
                     }
                 ],
+                "partialFingerprints": {
+                    "toolatlas/v1": _fingerprint(
+                        finding.rule_id,
+                        finding.capability_id,
+                        finding.evidence,
+                    )
+                },
                 "properties": {
                     "severity": finding.severity.value,
                     "confidence": finding.confidence,
@@ -102,6 +115,14 @@ def repository_sarif_report(manifest: RepositoryManifest) -> str:
                         }
                     }
                 ],
+                "partialFingerprints": {
+                    "toolatlas/v1": _fingerprint(
+                        finding.rule_id,
+                        finding.path,
+                        finding.line,
+                        finding.evidence,
+                    )
+                },
                 "properties": {
                     "severity": finding.severity.value,
                     "confidence": finding.confidence,
