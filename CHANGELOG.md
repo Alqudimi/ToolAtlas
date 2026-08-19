@@ -2,6 +2,13 @@
 
 All notable changes to ToolAtlas are documented here.
 
+## [Unreleased]
+
+### Added
+
+- Adversarial input-validation and CLI boundary coverage across the adapter, domain, application, and CLI layers (`tests/test_adversarial_coverage.py`).
+- Regression tests for rejected malformed JSON, invalid UTF-8, oversized payloads, invalid record shapes, scope and metadata schema violations, lockfile tampering, malformed baseline findings, repository path-safety edges (escaping symlinks, non-directory roots, file-count limits), `diff` drift exit codes, `baseline --check` new-finding reporting, `stdin` scans, and `KeyboardInterrupt` error rendering.
+
 ## [0.3.0] - 2026-08-18
 
 ### Added
