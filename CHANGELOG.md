@@ -2,6 +2,18 @@
 
 All notable changes to ToolAtlas are documented here.
 
+## [0.4.0] - 2026-08-19
+
+### Added
+
+- Configurable `--max-files` and `--max-file-bytes` bounds for `repo-scan`, `lock`, and `baseline`.
+- Fail-closed CLI coverage for oversized files and repository file-count limits.
+- Documentation examples for tightening resource bounds in constrained CI environments.
+
+### Security notes
+
+The secure defaults remain 2,000 scannable files and 1,000,000 bytes per file. Lower limits can reduce denial-of-service exposure; higher limits should be reviewed for the target runner.
+
 ## [0.3.0] - 2026-08-18
 
 ### Added

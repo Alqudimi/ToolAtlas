@@ -96,3 +96,14 @@ def test_file_limit_is_enforced(tmp_path: Path) -> None:
     (tmp_path / "large.md").write_text("x" * 20, encoding="utf-8")
     with pytest.raises(Exception, match="file exceeds limit"):
         scan_repository(tmp_path, max_file_bytes=10)
+
+
+def test_cli_repository_limits_fail_closed(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    (tmp_path / "large.md").write_text("x" * 20, encoding="utf-8")
+    assert main(["repo-scan", str(tmp_path), "--max-file-bytes", "10"]) == 2
+    assert "INPUT_TOO_LARGE" in capsys.readouterr().err
+    (tmp_path / "small.md").write_text("safe", encoding="utf-8")
+    assert main(["repo-scan", str(tmp_path), "--max-files", "1"]) == 2
+    assert "INPUT_TOO_LARGE" in capsys.readouterr().err

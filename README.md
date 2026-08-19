@@ -59,13 +59,14 @@ ToolAtlas can scan a repository of agent instructions, skills, MCP configuration
 ```bash
 toolatlas repo-scan . --format terminal
 toolatlas repo-scan . --format sarif --output toolatlas.sarif
+toolatlas repo-scan . --max-files 500 --max-file-bytes 500000
 toolatlas lock . --output toolatlas.lock.json
 toolatlas lock . --output toolatlas.lock.json --verify
 toolatlas baseline . --output toolatlas.baseline.json
 toolatlas baseline . --output toolatlas.baseline.json --check
 ```
 
-The lockfile is a reproducibility record, not a publisher signature or SLSA attestation. The baseline is intentionally explicit: new findings fail with exit code `3`, while the report remains available for review. Path traversal, oversized files, invalid UTF-8, hidden Unicode, secret-like literals, risky command sinks, and compound cross-file signals are tested as untrusted-input cases.
+The lockfile is a reproducibility record, not a publisher signature or SLSA attestation. The baseline is intentionally explicit: new findings fail with exit code `3`, while the report remains available for review. Repository commands default to 2,000 scannable files and 1,000,000 bytes per file; use `--max-files` and `--max-file-bytes` to tighten these limits for CI or constrained environments. Path traversal, oversized files, invalid UTF-8, hidden Unicode, secret-like literals, risky command sinks, and compound cross-file signals are tested as untrusted-input cases.
 
 ## Input contract
 
@@ -94,9 +95,9 @@ It also accepts an MCP-like shape with `tools`, `resources`, and `prompts` array
 toolatlas scan INPUT [--format terminal|json|sarif] [--output PATH]
 toolatlas policy INPUT [--max-severity info|low|medium|high|critical] [--output PATH]
 toolatlas diff BEFORE AFTER [--format terminal|json] [--output PATH]
-toolatlas repo-scan ROOT [--format terminal|json|sarif] [--output PATH]
-toolatlas lock ROOT [--output PATH] [--verify]
-toolatlas baseline ROOT [--output PATH] [--check]
+toolatlas repo-scan ROOT [--format terminal|json|sarif] [--output PATH] [--max-files N] [--max-file-bytes N]
+toolatlas lock ROOT [--output PATH] [--verify] [--max-files N] [--max-file-bytes N]
+toolatlas baseline ROOT [--output PATH] [--check] [--max-files N] [--max-file-bytes N]
 ```
 
 | Code | Meaning |
@@ -132,13 +133,13 @@ A repository can use the published composite action after checking out its code:
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: Alqudimi/ToolAtlas@v0.3.0
+- uses: Alqudimi/ToolAtlas@v0.4.0
   with:
     path: .
     fail-on-high: 'true'
 ```
 
-The example uses the reviewed `v0.3.0` release tag. For stronger supply-chain pinning, reference the full commit SHA. The action emits SARIF with physical file locations and deterministic `partialFingerprints`, then uploads the report as a workflow artifact.
+The example uses the reviewed `v0.4.0` release tag. For stronger supply-chain pinning, reference the full commit SHA. The action emits SARIF with physical file locations and deterministic `partialFingerprints`, then uploads the report as a workflow artifact. Tighten scanner resources in constrained runners with `--max-files` and `--max-file-bytes` when using the CLI directly.
 
 A repository can also run ToolAtlas as a normal Python quality gate and upload SARIF through the standard GitHub code-scanning action. The included workflow demonstrates the pattern without requiring Docker or external services.
 

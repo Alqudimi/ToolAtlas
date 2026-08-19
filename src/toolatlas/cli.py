@@ -110,6 +110,8 @@ def _parser() -> argparse.ArgumentParser:
     repo_parser.add_argument("root")
     repo_parser.add_argument("--format", choices=("terminal", "json", "sarif"), default="terminal")
     repo_parser.add_argument("--output", default=None)
+    repo_parser.add_argument("--max-files", type=int, default=2000)
+    repo_parser.add_argument("--max-file-bytes", type=int, default=1_000_000)
     lock_parser = subparsers.add_parser(
         "lock", help="create or verify a deterministic repository lockfile"
     )
@@ -117,10 +119,13 @@ def _parser() -> argparse.ArgumentParser:
     lock_parser.add_argument("--output", default="toolatlas.lock.json")
     lock_parser.add_argument("--verify", action="store_true")
     lock_parser.add_argument("--max-files", type=int, default=2000)
+    lock_parser.add_argument("--max-file-bytes", type=int, default=1_000_000)
     baseline_parser = subparsers.add_parser("baseline", help="create or check a finding baseline")
     baseline_parser.add_argument("root")
     baseline_parser.add_argument("--output", default="toolatlas.baseline.json")
     baseline_parser.add_argument("--check", action="store_true")
+    baseline_parser.add_argument("--max-files", type=int, default=2000)
+    baseline_parser.add_argument("--max-file-bytes", type=int, default=1_000_000)
     return parser
 
 
@@ -164,7 +169,11 @@ def _run(arguments: argparse.Namespace) -> int:
             content = diff_report(diff)
         _write(arguments.output, content)
         return 4 if diff.has_drift else 0
-    manifest = scan_repository(arguments.root, max_files=getattr(arguments, "max_files", 2000))
+    manifest = scan_repository(
+        arguments.root,
+        max_files=getattr(arguments, "max_files", 2000),
+        max_file_bytes=getattr(arguments, "max_file_bytes", 1_000_000),
+    )
     if arguments.command == "repo-scan":
         content = (
             _repository_terminal(manifest)
