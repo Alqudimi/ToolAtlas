@@ -2,6 +2,14 @@
 
 All notable changes to ToolAtlas are documented here.
 
+## [Unreleased]
+
+### Added
+
+- Contract tests for ``ManifestDiff`` properties (``has_drift``, ``added``, ``removed``, ``changed``).
+- CLI exit-code coverage for ``lock``, ``lock --verify``, ``baseline --check``, ``repo-scan`` JSON/SARIF, and ``policy --max-severity``.
+- Documented ``lock --verify`` boundary: keeping the lockfile inside the scanned root changes the digest and reports drift.
+
 ## [0.3.0] - 2026-08-18
 
 ### Added
