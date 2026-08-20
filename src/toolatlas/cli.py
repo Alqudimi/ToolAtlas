@@ -17,6 +17,7 @@ from toolatlas.application.repository_artifacts import (
     verify_lock,
     write_json,
 )
+from toolatlas.application.repository_policy import RepositoryPolicy, evaluate_repository_policy
 from toolatlas.application.repository_scan import (
     baseline_from_manifest,
     lock_from_manifest,
@@ -126,6 +127,18 @@ def _parser() -> argparse.ArgumentParser:
     baseline_parser.add_argument("--check", action="store_true")
     baseline_parser.add_argument("--max-files", type=int, default=2000)
     baseline_parser.add_argument("--max-file-bytes", type=int, default=1_000_000)
+    repo_policy_parser = subparsers.add_parser(
+        "repo-policy", help="evaluate repository findings against a deterministic policy"
+    )
+    repo_policy_parser.add_argument("root")
+    repo_policy_parser.add_argument(
+        "--max-severity", choices=tuple(item.value for item in Severity), default="high"
+    )
+    repo_policy_parser.add_argument("--allow-rule", action="append", default=[])
+    repo_policy_parser.add_argument("--format", choices=("terminal", "json"), default="terminal")
+    repo_policy_parser.add_argument("--output", default=None)
+    repo_policy_parser.add_argument("--max-files", type=int, default=2000)
+    repo_policy_parser.add_argument("--max-file-bytes", type=int, default=1_000_000)
     return parser
 
 
@@ -186,6 +199,28 @@ def _run(arguments: argparse.Namespace) -> int:
         return (
             3 if any(item.severity.rank >= Severity.HIGH.rank for item in manifest.findings) else 0
         )
+    if arguments.command == "repo-policy":
+        policy_result = evaluate_repository_policy(
+            manifest,
+            RepositoryPolicy(Severity(arguments.max_severity), frozenset(arguments.allow_rule)),
+        )
+        if arguments.format == "json":
+            content = (
+                json.dumps(policy_result.payload(), ensure_ascii=False, sort_keys=True, indent=2)
+                + "\n"
+            )
+        else:
+            lines = [
+                f"policy: {'PASS' if policy_result.passed else 'FAIL'}",
+                f"max_severity: {policy_result.max_severity.value}",
+                f"evaluated_findings: {policy_result.evaluated_findings}",
+                f"violations: {len(policy_result.violations)}",
+            ]
+            for item in policy_result.violations:
+                lines.append(f"[BLOCKED] {item.rule_id} {item.path}:{item.line} — {item.title}")
+            content = "\n".join(lines) + "\n"
+        _write(arguments.output, content)
+        return 0 if policy_result.passed else 3
     if arguments.command == "lock":
         if arguments.verify:
             verify_lock(manifest, read_json(arguments.output))

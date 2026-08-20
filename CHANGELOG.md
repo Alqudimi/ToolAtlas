@@ -2,6 +2,19 @@
 
 All notable changes to ToolAtlas are documented here.
 
+## [0.5.0] - 2026-08-20
+
+### Added
+
+- Deterministic `repo-policy` command for repository findings.
+- Severity threshold evaluation with explicit repeated `--allow-rule` exceptions.
+- Terminal and JSON policy explanations with stable exit code `3` for violations.
+- Unit and CLI contract tests for pass, fail, exception, and JSON behavior.
+
+### Security notes
+
+Policy exceptions are explicit and reviewable. ToolAtlas does not infer trust from a rule exception and does not claim runtime enforcement; `repo-policy` is a pre-deploy static gate.
+
 ## [0.4.0] - 2026-08-19
 
 ### Added
