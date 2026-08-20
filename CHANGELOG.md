@@ -2,6 +2,16 @@
 
 All notable changes to ToolAtlas are documented here.
 
+## [Unreleased]
+
+### Added
+
+- Regression contract tests for the `repo-policy` gate: severity-boundary evaluation across `MEDIUM`/`HIGH`/`CRITICAL` thresholds, partial `--allow-rule` suppression with cross-file correlation (`TA110`) co-existing, no-op behavior for unknown allow rules, `INVALID_INPUT` (exit 2) for non-directory and missing roots, `UNSAFE_PATH` for escaping symlinks, `--output` file writing for both terminal and JSON policy payloads, and clean-repository pass output.
+
+### Security notes
+
+Exit code and policy evaluation semantics of the pre-deploy gate are now regression-proof; a failure to detect threshold or allow-rule regressions would have turned a failing gate into a passing one.
+
 ## [0.5.0] - 2026-08-20
 
 ### Added
