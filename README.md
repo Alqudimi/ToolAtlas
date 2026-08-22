@@ -62,13 +62,14 @@ toolatlas repo-scan . --format sarif --output toolatlas.sarif
 toolatlas repo-scan . --max-files 500 --max-file-bytes 500000
 toolatlas repo-policy . --max-severity medium --format terminal
 toolatlas repo-policy . --max-severity medium --allow-rule TA102 --format json
+toolatlas repo-policy . --policy-file examples/toolatlas.policy.json --format json
 toolatlas lock . --output toolatlas.lock.json
 toolatlas lock . --output toolatlas.lock.json --verify
 toolatlas baseline . --output toolatlas.baseline.json
 toolatlas baseline . --output toolatlas.baseline.json --check
 ```
 
-`repo-policy` is the deterministic policy-as-code gate for repository findings. It evaluates every finding against a maximum allowed severity, supports explicit rule exceptions with repeated `--allow-rule`, emits an explanation in terminal or JSON form, and returns exit code `3` when a violation remains. The lockfile is a reproducibility record, not a publisher signature or SLSA attestation. The baseline is intentionally explicit: new findings fail with exit code `3`, while the report remains available for review. Repository commands default to 2,000 scannable files and 1,000,000 bytes per file; use `--max-files` and `--max-file-bytes` to tighten these limits for CI or constrained environments. Path traversal, oversized files, invalid UTF-8, hidden Unicode, secret-like literals, risky command sinks, and compound cross-file signals are tested as untrusted-input cases.
+`repo-policy` is the deterministic policy-as-code gate for repository findings. It evaluates every finding against a maximum allowed severity, supports explicit rule exceptions with repeated `--allow-rule`, or reads the same contract from a versioned JSON file such as `examples/toolatlas.policy.json`. A policy file must contain `schema_version: 1`, a valid `max_severity`, and an array of non-empty `allow_rules`. The command emits an explanation in terminal or JSON form and returns exit code `3` when a violation remains. The lockfile is a reproducibility record, not a publisher signature or SLSA attestation. The baseline is intentionally explicit: new findings fail with exit code `3`, while the report remains available for review. Repository commands default to 2,000 scannable files and 1,000,000 bytes per file; use `--max-files` and `--max-file-bytes` to tighten these limits for CI or constrained environments. Path traversal, oversized files, invalid UTF-8, hidden Unicode, secret-like literals, risky command sinks, and compound cross-file signals are tested as untrusted-input cases.
 
 ## Input contract
 
@@ -98,7 +99,7 @@ toolatlas scan INPUT [--format terminal|json|sarif] [--output PATH]
 toolatlas policy INPUT [--max-severity info|low|medium|high|critical] [--output PATH]
 toolatlas diff BEFORE AFTER [--format terminal|json] [--output PATH]
 toolatlas repo-scan ROOT [--format terminal|json|sarif] [--output PATH] [--max-files N] [--max-file-bytes N]
-toolatlas repo-policy ROOT [--max-severity info|low|medium|high|critical] [--allow-rule RULE_ID]... [--format terminal|json] [--output PATH]
+toolatlas repo-policy ROOT [--max-severity info|low|medium|high|critical] [--allow-rule RULE_ID]... [--policy-file PATH] [--format terminal|json] [--output PATH]
 toolatlas lock ROOT [--output PATH] [--verify] [--max-files N] [--max-file-bytes N]
 toolatlas baseline ROOT [--output PATH] [--check] [--max-files N] [--max-file-bytes N]
 ```

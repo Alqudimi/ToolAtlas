@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from toolatlas.domain.errors import InputError
 from toolatlas.domain.models import Severity
 from toolatlas.domain.repository import RepositoryFinding, RepositoryManifest
 
@@ -11,6 +12,20 @@ from toolatlas.domain.repository import RepositoryFinding, RepositoryManifest
 class RepositoryPolicy:
     max_severity: Severity = Severity.HIGH
     allow_rules: frozenset[str] = frozenset()
+
+
+def policy_from_payload(payload: dict[str, Any]) -> RepositoryPolicy:
+    if payload.get("schema_version") != 1:
+        raise InputError("repository policy schema_version must be 1")
+    raw_severity = payload.get("max_severity", Severity.HIGH.value)
+    if not isinstance(raw_severity, str) or raw_severity not in {item.value for item in Severity}:
+        raise InputError("repository policy max_severity must be a valid severity")
+    raw_allow_rules = payload.get("allow_rules", [])
+    if not isinstance(raw_allow_rules, list) or not all(
+        isinstance(item, str) and item for item in raw_allow_rules
+    ):
+        raise InputError("repository policy allow_rules must be an array of non-empty strings")
+    return RepositoryPolicy(Severity(raw_severity), frozenset(raw_allow_rules))
 
 
 @dataclass(frozen=True, slots=True)

@@ -17,7 +17,11 @@ from toolatlas.application.repository_artifacts import (
     verify_lock,
     write_json,
 )
-from toolatlas.application.repository_policy import RepositoryPolicy, evaluate_repository_policy
+from toolatlas.application.repository_policy import (
+    RepositoryPolicy,
+    evaluate_repository_policy,
+    policy_from_payload,
+)
 from toolatlas.application.repository_scan import (
     baseline_from_manifest,
     lock_from_manifest,
@@ -132,9 +136,10 @@ def _parser() -> argparse.ArgumentParser:
     )
     repo_policy_parser.add_argument("root")
     repo_policy_parser.add_argument(
-        "--max-severity", choices=tuple(item.value for item in Severity), default="high"
+        "--max-severity", choices=tuple(item.value for item in Severity), default=None
     )
-    repo_policy_parser.add_argument("--allow-rule", action="append", default=[])
+    repo_policy_parser.add_argument("--allow-rule", action="append", default=None)
+    repo_policy_parser.add_argument("--policy-file", default=None)
     repo_policy_parser.add_argument("--format", choices=("terminal", "json"), default="terminal")
     repo_policy_parser.add_argument("--output", default=None)
     repo_policy_parser.add_argument("--max-files", type=int, default=2000)
@@ -156,8 +161,8 @@ def _run(arguments: argparse.Namespace) -> int:
         )
     if arguments.command == "policy":
         result = _scan(arguments.input)
-        policy = compile_policy(result, PolicyOptions(Severity(arguments.max_severity)))
-        _write(arguments.output, json_policy(policy))
+        compiled_policy = compile_policy(result, PolicyOptions(Severity(arguments.max_severity)))
+        _write(arguments.output, json_policy(compiled_policy))
         return 0
     if arguments.command == "diff":
         before = _scan(arguments.before).manifest
@@ -200,10 +205,15 @@ def _run(arguments: argparse.Namespace) -> int:
             3 if any(item.severity.rank >= Severity.HIGH.rank for item in manifest.findings) else 0
         )
     if arguments.command == "repo-policy":
-        policy_result = evaluate_repository_policy(
-            manifest,
-            RepositoryPolicy(Severity(arguments.max_severity), frozenset(arguments.allow_rule)),
-        )
+        if arguments.policy_file is not None:
+            policy_data = read_json(arguments.policy_file)
+            repository_policy = policy_from_payload(policy_data)
+        else:
+            repository_policy = RepositoryPolicy(
+                Severity(arguments.max_severity or Severity.HIGH.value),
+                frozenset(arguments.allow_rule or ()),
+            )
+        policy_result = evaluate_repository_policy(manifest, repository_policy)
         if arguments.format == "json":
             content = (
                 json.dumps(policy_result.payload(), ensure_ascii=False, sort_keys=True, indent=2)

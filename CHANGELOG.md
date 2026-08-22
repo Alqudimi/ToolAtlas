@@ -2,6 +2,19 @@
 
 All notable changes to ToolAtlas are documented here.
 
+## [0.6.0] - 2026-08-22
+
+### Added
+
+- Versioned JSON policy files for `repo-policy` via `--policy-file`.
+- Fail-closed validation for `schema_version`, severity values, and non-empty `allow_rules`.
+- `examples/toolatlas.policy.json` as a reviewable policy-as-code starting point.
+- Regression tests for policy-file pass and malformed-input paths.
+
+### Security notes
+
+Policy files are treated as untrusted input and validated before evaluation. Explicit allow rules remain reviewable exceptions; they do not imply runtime authorization or prove that a finding is safe.
+
 ## [0.5.0] - 2026-08-20
 
 ### Added
