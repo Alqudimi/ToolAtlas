@@ -137,13 +137,13 @@ A repository can use the published composite action after checking out its code:
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: Alqudimi/ToolAtlas@v0.5.0
+- uses: Alqudimi/ToolAtlas@v0.6.0
   with:
     path: .
     fail-on-high: 'true'
 ```
 
-The example uses the reviewed `v0.5.0` release tag. For stronger supply-chain pinning, reference the full commit SHA. The action emits SARIF with physical file locations and deterministic `partialFingerprints`, then uploads the report as a workflow artifact. Tighten scanner resources in constrained runners with `--max-files` and `--max-file-bytes` when using the CLI directly.
+The example uses the reviewed `v0.6.0` release tag. For stronger supply-chain pinning, reference the full commit SHA. The action emits SARIF with physical file locations and deterministic `partialFingerprints`, then uploads the report as a workflow artifact. Tighten scanner resources in constrained runners with `--max-files` and `--max-file-bytes` when using the CLI directly.
 
 A repository can also run ToolAtlas as a normal Python quality gate and upload SARIF through the standard GitHub code-scanning action. The included workflow demonstrates the pattern without requiring Docker or external services.
 

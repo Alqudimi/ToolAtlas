@@ -2,6 +2,12 @@
 
 All notable changes to ToolAtlas are documented here.
 
+## [0.6.1] - 2026-08-22
+
+### Fixed
+
+- Updated the README composite Action example to reference the published `v0.6.0` release instead of the previous tag.
+
 ## [0.6.0] - 2026-08-22
 
 ### Added
